@@ -1,103 +1,146 @@
-# BEAR.Sunday Taint Analysis Demo
+# BEAR.Sunday Psalm Taint Plugin
 
-Psalm taint analysis demonstration for BEAR.Sunday ecosystem security validation.
+Psalm taint analysis plugin for BEAR.Sunday framework.
 
-## Goals
+## Overview
 
-This project validates that Psalm's taint analysis correctly detects security vulnerabilities in BEAR.Sunday applications.
+BEAR.Sunday の `ResourceObject` は内部的に `call_user_func_array` を介して動的に実行されるため、Psalm の標準の taint analysis では `onGet`/`onPost` 等のメソッドパラメータが外部入力として認識されません。
 
-### Detection Goals (Vulnerable Code)
+このプラグインは、`ResourceObject` を継承したクラスの `on*` メソッドの全パラメータを自動的に taint source として登録し、E2E での脆弱性検出を可能にします。
 
-| Vulnerability | Expected Detection | File | Status |
-|--------------|-------------------|------|--------|
-| SQL Injection | TaintedSql | SqlInjection.php | Detected |
-| XSS (echo) | TaintedHtml | Xss.php | Detected |
-| Shell Injection | TaintedShell | ShellInjection.php | Detected |
-| SSRF (file_get_contents) | TaintedSSRF | Ssrf.php | Detected |
-| SSRF (curl) | TaintedSSRF | Ssrf.php | Detected |
+## Installation
 
-### Safe Code Goals
+```bash
+composer require --dev bear/psalm-taint-plugin
+```
 
-| Pattern | File | Expected Result | Status |
-|---------|------|----------------|--------|
-| MediaQuery prepared statements | SqlPrepared.php | No TaintedSql | Pass |
-| Qiq escape helpers | HtmlEscaped.php | No TaintedHtml | Pass |
-| Qiq escape + echo | QiqEscapedEcho.php | No TaintedHtml | Pass |
-| JsonRenderer | JsonOutput.php | No TaintedHtml | Pass |
-| JsonRenderer + echo | JsonRendererEcho.php | No TaintedHtml | Pass |
-| Twig autoescape | TwigEscaped.php | No TaintedHtml | Pass |
+## Configuration
 
-## Quick Start
+`psalm.xml` にプラグインを追加:
+
+```xml
+<plugins>
+    <pluginClass class="BearSunday\TaintDemo\ResourceTaintPlugin">
+        <targets>
+            <target>Page</target>
+            <target>App</target>
+        </targets>
+    </pluginClass>
+</plugins>
+```
+
+### Targets
+
+`targets` で汚染源とするリソースタイプを指定できます:
+
+- `Page` - `\Resource\Page\` 名前空間のリソース
+- `App` - `\Resource\App\` 名前空間のリソース
+
+デフォルトは両方が有効です。
+
+## Usage
+
+```bash
+./vendor/bin/psalm --taint-analysis
+```
+
+### Detection Example
+
+```php
+class User extends ResourceObject
+{
+    public function onGet(string $id): static
+    {
+        // TaintedSql が検出される！
+        $sql = "SELECT * FROM users WHERE id = '$id'";
+        $this->pdo->query($sql);
+
+        return $this;
+    }
+}
+```
+
+### Safe Pattern
+
+```php
+class User extends ResourceObject
+{
+    public function onGet(string $id): static
+    {
+        // prepared statement で安全
+        $this->pdo->perform(
+            'SELECT * FROM users WHERE id = :id',
+            ['id' => $id]
+        );
+
+        return $this;
+    }
+}
+```
+
+## Demo
+
+このリポジトリには検証用のデモコードが含まれています。
+
+### Run Demo
 
 ```bash
 # Install dependencies
 composer install
 
-# Run taint analysis on Vulnerable (expect 7 errors)
-./vendor/bin/psalm --taint-analysis src/Resource/App/Vulnerable/
+# Run taint analysis on Vulnerable (expect errors)
+./vendor/bin/psalm --taint-analysis demo-app/src/Resource/App/Vulnerable/
 
-# Run taint analysis on Safe (expect 0 errors)
-./vendor/bin/psalm --taint-analysis src/Resource/App/Safe/
+# Run taint analysis on Safe (expect no errors)
+./vendor/bin/psalm --taint-analysis demo-app/src/Resource/App/Safe/
 ```
 
-## Directory Structure
+### Vulnerable Patterns (demo-app/src/Resource/App/Vulnerable/)
 
-```
-src/Resource/App/
-├── Vulnerable/              # Intentionally vulnerable code
-│   ├── SqlInjection.php     # Direct SQL concatenation
-│   ├── Xss.php              # Unescaped HTML output
-│   ├── ShellInjection.php   # Direct shell command execution
-│   └── Ssrf.php             # SSRF via file_get_contents/curl
-└── Safe/                    # Secure patterns
-    ├── SqlPrepared.php      # Using MediaQuery prepared statements
-    ├── HtmlEscaped.php      # Using Qiq escape helpers
-    ├── QiqEscapedEcho.php   # Qiq escape with echo output
-    ├── JsonOutput.php       # Using JsonRenderer
-    ├── JsonRendererEcho.php # JsonRenderer with echo output
-    └── TwigEscaped.php      # Using Twig autoescape
-```
+| File | Vulnerability | Detection |
+|------|--------------|-----------|
+| SqlInjection.php | PDO SQL injection | TaintedSql |
+| AuraSqlInjection.php | Aura.Sql query/exec/prepare | TaintedSql |
+| MethodParamInjection.php | Method parameter SQL injection | TaintedSql |
+| Xss.php | Unescaped HTML output | TaintedHtml |
+| ShellInjection.php | shell_exec/exec | TaintedShell |
+| Ssrf.php | file_get_contents/curl | TaintedFile, TaintedSSRF |
 
-## Running Tests
+### Safe Patterns (demo-app/src/Resource/App/Safe/)
 
-### Vulnerable Code Only
+| File | Pattern | Result |
+|------|---------|--------|
+| SqlPrepared.php | MediaQuery prepared statements | No errors |
+| AuraSqlPrepared.php | Aura.Sql perform/fetchAll/quote | No errors |
+| MethodParamPrepared.php | Method params + prepared statements | No errors |
+| HtmlEscaped.php | Qiq escape helpers | No errors |
+| QiqEscapedEcho.php | Qiq escape + echo | No errors |
+| JsonOutput.php | JsonRenderer | No errors |
+| JsonRendererEcho.php | JsonRenderer + echo | No errors |
+| TwigEscaped.php | Twig autoescape | No errors |
 
-```bash
-./vendor/bin/psalm --taint-analysis src/Resource/App/Vulnerable/
-# Expected: 7 errors (TaintedSql, TaintedHtml, TaintedShell, TaintedSSRF x2, TaintedTextWithQuotes)
-```
+## Required Package Annotations
 
-### Safe Code Only
+このプラグインと組み合わせて使用する BEAR.Sunday エコシステムのパッケージには、taint annotation が必要です:
 
-```bash
-./vendor/bin/psalm --taint-analysis src/Resource/App/Safe/
-# Expected: No errors found
-```
+| Package | Annotations | PR |
+|---------|-------------|-----|
+| bear/resource | `@psalm-taint-source input` | [#343](https://github.com/bearsunday/BEAR.Resource/pull/343) |
+| ray/media-query | `@psalm-taint-escape sql` | [#78](https://github.com/ray-di/Ray.MediaQuery/pull/78) |
+| aura/sql | `@psalm-taint-sink sql`, `@psalm-taint-escape sql` | [#248](https://github.com/auraphp/Aura.Sql/pull/248) |
+| qiq/qiq | `@psalm-taint-escape html` | Already supported |
+| madapaja/twig-module | `@psalm-taint-escape html` | [#50](https://github.com/madapaja/Madapaja.TwigModule/pull/50) |
 
-## Required Taint Annotations
+## How It Works
 
-For full E2E functionality, the following packages need taint annotations:
+1. `AfterFunctionLikeAnalysisInterface` フックで `on*` メソッドの解析後に介入
+2. `ResourceObject` を継承したクラスかどうかを `classExtends` で判定
+3. 対象メソッドの全パラメータに `TaintKindGroup::ALL_INPUT` を付与した `TaintSource` を生成
+4. `taint_flow_graph->addSource()` でグラフに登録
 
-| Package | PR | Annotations |
-|---------|-----|-------------|
-| ray/media-query | [#78](https://github.com/ray-di/Ray.MediaQuery/pull/78) | `@psalm-taint-escape sql` |
-| bear/resource | Pending | `@psalm-taint-source input`, `@psalm-taint-escape html` |
-| ray/aura-sql-module | Pending | `@psalm-taint-sink sql`, `@psalm-taint-escape sql` |
-| qiq/qiq | Pending | `@psalm-taint-escape html` |
-| madapaja/twig-module | Pending | `@psalm-taint-escape html` |
-
-## PDO Stub
-
-This project includes a PDO stub (`stubs/PDO.phpstub`) that marks `PDO::query()` and `PDO::exec()` as SQL sinks. This is required because Psalm's default stubs don't include taint annotations for PDO.
-
-## CI Integration
-
-The project includes a GitHub Actions workflow that:
-
-1. Verifies Vulnerable code triggers expected detections (TaintedSql, TaintedHtml, TaintedShell, TaintedSSRF)
-2. Verifies Safe code has no taint errors
+これにより、`call_user_func_array` による動的ディスパッチの制限を回避し、メソッドパラメータからシンク（`PDO::query()` 等）までの taint flow を追跡できます。
 
 ## References
 
-- [Psalm Taint Analysis Documentation](https://psalm.dev/docs/security_analysis/)
+- [Psalm Taint Analysis](https://psalm.dev/docs/security_analysis/)
 - [BEAR.Sunday Framework](https://bearsunday.github.io/)
