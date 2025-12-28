@@ -9,6 +9,7 @@
         "bear/resource": "^1.17",
         "bear/sunday": "^1.6",
         "koriym/env-json": "^1.0",
+        "madapaja/twig-module": "^2.6",
         "qiq/qiq": "^3.0",
         "ray/aop": "^2.12",
         "ray/aura-sql-module": "^1.17",

@@ -23,35 +23,48 @@ jobs:
       - name: Install dependencies
         run: composer install --no-progress --prefer-dist
 
-      - name: Run Taint Analysis
-        run: ./vendor/bin/psalm --taint-analysis
-
       - name: Verify Vulnerable code is detected
         run: |
           OUTPUT=$(./vendor/bin/psalm --taint-analysis src/Resource/App/Vulnerable/ 2>&1) || true
+
+          PASS=true
 
           # Check for expected detections
           if echo "$OUTPUT" | grep -q "TaintedSql"; then
             echo "✓ TaintedSql detected"
           else
             echo "✗ TaintedSql NOT detected"
-            exit 1
+            PASS=false
           fi
 
           if echo "$OUTPUT" | grep -q "TaintedHtml"; then
             echo "✓ TaintedHtml detected"
           else
             echo "✗ TaintedHtml NOT detected"
-            exit 1
+            PASS=false
           fi
 
           if echo "$OUTPUT" | grep -q "TaintedShell"; then
             echo "✓ TaintedShell detected"
           else
             echo "✗ TaintedShell NOT detected"
+            PASS=false
+          fi
+
+          if echo "$OUTPUT" | grep -q "TaintedSSRF\|TaintedCustom"; then
+            echo "✓ SSRF-related taint detected"
+          else
+            echo "✗ SSRF-related taint NOT detected"
+            PASS=false
+          fi
+
+          if [ "$PASS" = false ]; then
+            echo ""
+            echo "Some expected vulnerabilities were not detected!"
             exit 1
           fi
 
+          echo ""
           echo "All expected vulnerabilities detected!"
 
       - name: Verify Safe code has no errors

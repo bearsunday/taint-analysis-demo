@@ -8,19 +8,24 @@ This project validates that Psalm's taint analysis correctly detects security vu
 
 ### Detection Goals (Vulnerable Code)
 
-| Vulnerability | Expected Detection | Status |
-|--------------|-------------------|--------|
-| SQL Injection | TaintedSql | Detected |
-| XSS (echo) | TaintedHtml | Detected |
-| Shell Injection | TaintedShell | Detected |
+| Vulnerability | Expected Detection | File | Status |
+|--------------|-------------------|------|--------|
+| SQL Injection | TaintedSql | SqlInjection.php | Detected |
+| XSS (echo) | TaintedHtml | Xss.php | Detected |
+| Shell Injection | TaintedShell | ShellInjection.php | Detected |
+| SSRF (file_get_contents) | TaintedSSRF | Ssrf.php | Detected |
+| SSRF (curl) | TaintedSSRF | Ssrf.php | Detected |
 
 ### Safe Code Goals
 
-| Pattern | Expected Result | Status |
-|---------|----------------|--------|
-| MediaQuery (prepared statements) | No TaintedSql | Pass |
-| Qiq escape helpers | No TaintedHtml | Pass |
-| JsonRenderer | No TaintedHtml | Pass |
+| Pattern | File | Expected Result | Status |
+|---------|------|----------------|--------|
+| MediaQuery prepared statements | SqlPrepared.php | No TaintedSql | Pass |
+| Qiq escape helpers | HtmlEscaped.php | No TaintedHtml | Pass |
+| Qiq escape + echo | QiqEscapedEcho.php | No TaintedHtml | Pass |
+| JsonRenderer | JsonOutput.php | No TaintedHtml | Pass |
+| JsonRenderer + echo | JsonRendererEcho.php | No TaintedHtml | Pass |
+| Twig autoescape | TwigEscaped.php | No TaintedHtml | Pass |
 
 ## Quick Start
 
@@ -28,49 +33,50 @@ This project validates that Psalm's taint analysis correctly detects security vu
 # Install dependencies
 composer install
 
-# Run taint analysis
-./vendor/bin/psalm --taint-analysis
+# Run taint analysis on Vulnerable (expect 7 errors)
+./vendor/bin/psalm --taint-analysis src/Resource/App/Vulnerable/
 
-# Expected: 5 errors in Vulnerable/, 0 errors in Safe/
+# Run taint analysis on Safe (expect 0 errors)
+./vendor/bin/psalm --taint-analysis src/Resource/App/Safe/
 ```
 
 ## Directory Structure
 
 ```
 src/Resource/App/
-├── Vulnerable/           # Intentionally vulnerable code
-│   ├── SqlInjection.php  # Direct SQL concatenation
-│   ├── Xss.php           # Unescaped HTML output
-│   └── ShellInjection.php # Direct shell command execution
-└── Safe/                 # Secure patterns
-    ├── SqlPrepared.php   # Using MediaQuery prepared statements
-    ├── HtmlEscaped.php   # Using Qiq escape helpers
-    └── JsonOutput.php    # Using JsonRenderer
+├── Vulnerable/              # Intentionally vulnerable code
+│   ├── SqlInjection.php     # Direct SQL concatenation
+│   ├── Xss.php              # Unescaped HTML output
+│   ├── ShellInjection.php   # Direct shell command execution
+│   └── Ssrf.php             # SSRF via file_get_contents/curl
+└── Safe/                    # Secure patterns
+    ├── SqlPrepared.php      # Using MediaQuery prepared statements
+    ├── HtmlEscaped.php      # Using Qiq escape helpers
+    ├── QiqEscapedEcho.php   # Qiq escape with echo output
+    ├── JsonOutput.php       # Using JsonRenderer
+    ├── JsonRendererEcho.php # JsonRenderer with echo output
+    └── TwigEscaped.php      # Using Twig autoescape
 ```
 
 ## Running Tests
-
-### Full Analysis
-
-```bash
-./vendor/bin/psalm --taint-analysis
-```
 
 ### Vulnerable Code Only
 
 ```bash
 ./vendor/bin/psalm --taint-analysis src/Resource/App/Vulnerable/
+# Expected: 7 errors (TaintedSql, TaintedHtml, TaintedShell, TaintedSSRF x2, TaintedTextWithQuotes)
 ```
 
 ### Safe Code Only
 
 ```bash
 ./vendor/bin/psalm --taint-analysis src/Resource/App/Safe/
+# Expected: No errors found
 ```
 
 ## Required Taint Annotations
 
-For full functionality, the following packages need taint annotations:
+For full E2E functionality, the following packages need taint annotations:
 
 | Package | PR | Annotations |
 |---------|-----|-------------|
@@ -78,6 +84,7 @@ For full functionality, the following packages need taint annotations:
 | bear/resource | Pending | `@psalm-taint-source input`, `@psalm-taint-escape html` |
 | ray/aura-sql-module | Pending | `@psalm-taint-sink sql`, `@psalm-taint-escape sql` |
 | qiq/qiq | Pending | `@psalm-taint-escape html` |
+| madapaja/twig-module | Pending | `@psalm-taint-escape html` |
 
 ## PDO Stub
 
@@ -85,12 +92,10 @@ This project includes a PDO stub (`stubs/PDO.phpstub`) that marks `PDO::query()`
 
 ## CI Integration
 
-Add to your GitHub Actions workflow:
+The project includes a GitHub Actions workflow that:
 
-```yaml
-- name: Run Psalm Taint Analysis
-  run: ./vendor/bin/psalm --taint-analysis
-```
+1. Verifies Vulnerable code triggers expected detections (TaintedSql, TaintedHtml, TaintedShell, TaintedSSRF)
+2. Verifies Safe code has no taint errors
 
 ## References
 
