@@ -3,18 +3,37 @@
     "type": "project",
     "license": "proprietary",
     "description": "",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/koriym/Aura.Sql.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/bearsunday/BEAR.Resource.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/ray-di/Ray.MediaQuery.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/madapaja/Madapaja.TwigModule.git"
+        }
+    ],
     "require": {
         "php": "^8.3.0",
+        "aura/sql": "dev-add-psalm-taint-annotations as 6.0.0",
         "bear/package": "^1.14",
-        "bear/resource": "^1.17",
+        "bear/resource": "dev-add-psalm-taint-annotations as 1.28.0",
         "bear/sunday": "^1.6",
         "koriym/env-json": "^1.0",
-        "madapaja/twig-module": "^2.6",
+        "madapaja/twig-module": "dev-add-psalm-taint-annotations as 2.6.0",
         "qiq/qiq": "^3.0",
         "ray/aop": "^2.12",
         "ray/aura-sql-module": "^1.17",
         "ray/di": "^2.14",
-        "ray/media-query": "^1.0"
+        "ray/media-query": "dev-add-psalm-taint-annotations as 1.0.1"
     },
     "require-dev": {
         "bear/api-doc": "^1.1",

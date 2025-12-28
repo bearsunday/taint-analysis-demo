@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3de57bf3a23f8950e356150830315efe",
+    "content-hash": "a45363e1315aef809853d1868bb82250",
     "packages": [
         {
             "name": "aura/cli",
@@ -69,21 +69,21 @@
         },
         {
             "name": "aura/sql",
-            "version": "5.0.3",
+            "version": "dev-add-psalm-taint-annotations",
             "source": {
                 "type": "git",
-                "url": "https://github.com/auraphp/Aura.Sql.git",
-                "reference": "fd7a6dd1c9d2a1da5754c50f287f8be8a27db0e7"
+                "url": "https://github.com/koriym/Aura.Sql.git",
+                "reference": "c3ce56b750cfe5859ca4865b3faa1b17a7bc51d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/auraphp/Aura.Sql/zipball/fd7a6dd1c9d2a1da5754c50f287f8be8a27db0e7",
-                "reference": "fd7a6dd1c9d2a1da5754c50f287f8be8a27db0e7",
+                "url": "https://api.github.com/repos/koriym/Aura.Sql/zipball/c3ce56b750cfe5859ca4865b3faa1b17a7bc51d2",
+                "reference": "c3ce56b750cfe5859ca4865b3faa1b17a7bc51d2",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
-                "php": ">=8.1",
+                "php": "^8.4",
                 "psr/log": "^1.0 || ^2.0 || ^3.0"
             },
             "require-dev": {
@@ -96,7 +96,11 @@
                     "Aura\\Sql\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Aura\\Sql\\": "tests/"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -120,10 +124,9 @@
                 "sqlsrv"
             ],
             "support": {
-                "issues": "https://github.com/auraphp/Aura.Sql/issues",
-                "source": "https://github.com/auraphp/Aura.Sql/tree/5.0.3"
+                "source": "https://github.com/koriym/Aura.Sql/tree/add-psalm-taint-annotations"
             },
-            "time": "2025-01-22T06:39:17+00:00"
+            "time": "2025-12-28T13:02:13+00:00"
         },
         {
             "name": "aura/sqlquery",
@@ -409,16 +412,16 @@
         },
         {
             "name": "bear/resource",
-            "version": "1.28.0",
+            "version": "dev-add-psalm-taint-annotations",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bearsunday/BEAR.Resource.git",
-                "reference": "a087b457a80b705bae44fdae5c28ec95a9529e22"
+                "reference": "6b48f53da42a3e13919952a4f92bb8071e0ca7fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bearsunday/BEAR.Resource/zipball/a087b457a80b705bae44fdae5c28ec95a9529e22",
-                "reference": "a087b457a80b705bae44fdae5c28ec95a9529e22",
+                "url": "https://api.github.com/repos/bearsunday/BEAR.Resource/zipball/6b48f53da42a3e13919952a4f92bb8071e0ca7fa",
+                "reference": "6b48f53da42a3e13919952a4f92bb8071e0ca7fa",
                 "shasum": ""
             },
             "require": {
@@ -452,9 +455,6 @@
                 }
             },
             "autoload": {
-                "files": [
-                    "src-files/uri_template.php"
-                ],
                 "psr-4": {
                     "BEAR\\Resource\\": [
                         "src/",
@@ -463,11 +463,75 @@
                     ],
                     "Ray\\WebContextParam\\": "src-web-context"
                 },
+                "files": [
+                    "src-files/uri_template.php"
+                ],
                 "exclude-from-classmap": [
                     "/src-deprecated/"
                 ]
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "BEAR\\Resource\\": [
+                        "tests/",
+                        "tests/Fake/",
+                        "tests-deprecated"
+                    ],
+                    "FakeVendor\\Sandbox\\": "tests/Fake/FakeVendor/Sandbox/",
+                    "FakeVendor\\Blog\\": "tests/Fake/FakeVendor/Blog/src",
+                    "FakeVendor\\News\\": "tests/Fake/FakeVendor/News/src"
+                },
+                "files": [
+                    "tests/Fake/AppInjector.php"
+                ]
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "tests": [
+                    "@cs",
+                    "@test",
+                    "@sa"
+                ],
+                "coverage": [
+                    "php -dzend_extension=xdebug.so -dxdebug.mode=coverage ./vendor/bin/phpunit --coverage-text --coverage-html=build/coverage"
+                ],
+                "pcov": [
+                    "php -dextension=pcov.so -d pcov.enabled=1 ./vendor/bin/phpunit --coverage-text --coverage-html=build/coverage  --coverage-clover=coverage.xml"
+                ],
+                "cs": [
+                    "phpcs --standard=phpcs.xml src tests"
+                ],
+                "cs-fix": [
+                    "phpcbf src tests"
+                ],
+                "clean": [
+                    "phpstan clear-result-cache",
+                    "psalm --clear-cache",
+                    "rm -rf tests/tmp/*.php"
+                ],
+                "sa": [
+                    "psalm --monochrome --show-info=true",
+                    "phpstan --memory-limit=-1 analyse -c phpstan.neon"
+                ],
+                "metrics": [
+                    "phpmetrics --report-html=build/metrics --exclude=Exception --log-junit=build/junit.xml --junit=build/junit.xml src"
+                ],
+                "phpmd": [
+                    "phpmd --exclude src/Annotation src text ./phpmd.xml"
+                ],
+                "build": [
+                    "@cs",
+                    "@sa",
+                    "@pcov",
+                    "@metrics"
+                ],
+                "baseline": [
+                    "phpstan analyse -c phpstan.neon --generate-baseline",
+                    "psalm --set-baseline=psalm-baseline.xml"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -479,15 +543,15 @@
             ],
             "description": "Hypermedia framework for object as a service",
             "keywords": [
+                "Hypermedia",
                 "Object as a service",
-                "hypermedia",
-                "rest"
+                "REST"
             ],
             "support": {
-                "issues": "https://github.com/bearsunday/BEAR.Resource/issues",
-                "source": "https://github.com/bearsunday/BEAR.Resource/tree/1.28.0"
+                "source": "https://github.com/bearsunday/BEAR.Resource/tree/add-psalm-taint-annotations",
+                "issues": "https://github.com/bearsunday/BEAR.Resource/issues"
             },
-            "time": "2025-12-08T17:40:26+00:00"
+            "time": "2025-12-23T15:22:18+00:00"
         },
         {
             "name": "bear/streamer",
@@ -1134,16 +1198,16 @@
         },
         {
             "name": "madapaja/twig-module",
-            "version": "2.6.0",
+            "version": "dev-add-psalm-taint-annotations",
             "source": {
                 "type": "git",
                 "url": "https://github.com/madapaja/Madapaja.TwigModule.git",
-                "reference": "e677a8509954b1e548ab5641018fbd1ff8e9fce3"
+                "reference": "9fcb1663b05ef5ef404014f2696557ea75c4e40e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/madapaja/Madapaja.TwigModule/zipball/e677a8509954b1e548ab5641018fbd1ff8e9fce3",
-                "reference": "e677a8509954b1e548ab5641018fbd1ff8e9fce3",
+                "url": "https://api.github.com/repos/madapaja/Madapaja.TwigModule/zipball/9fcb1663b05ef5ef404014f2696557ea75c4e40e",
+                "reference": "9fcb1663b05ef5ef404014f2696557ea75c4e40e",
                 "shasum": ""
             },
             "require": {
@@ -1177,7 +1241,44 @@
                     "Madapaja\\TwigModule\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Madapaja\\TwigModule\\": [
+                        "tests",
+                        "tests/Fake/src"
+                    ]
+                },
+                "files": [
+                    "tests/test_path.php"
+                ]
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "tests": [
+                    "@cs",
+                    "@sa",
+                    "@test"
+                ],
+                "coverage": [
+                    "php -dzend_extension=xdebug.so -dxdebug.mode=coverage phpunit --coverage-text --coverage-html=build/coverage"
+                ],
+                "cs": [
+                    "phpcs --standard=phpcs.xml src"
+                ],
+                "cs-fix": [
+                    "phpcbf src tests"
+                ],
+                "sa": [
+                    "psalm",
+                    "phpstan"
+                ],
+                "clean": [
+                    "phpstan clear-result-cache",
+                    "psalm --clear-cache"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -1191,13 +1292,13 @@
             "keywords": [
                 "BEAR.Sunday",
                 "BEAR.Sunday module",
-                "twig"
+                "Twig"
             ],
             "support": {
-                "issues": "https://github.com/madapaja/Madapaja.TwigModule/issues",
-                "source": "https://github.com/madapaja/Madapaja.TwigModule/tree/2.6.0"
+                "source": "https://github.com/madapaja/Madapaja.TwigModule/tree/add-psalm-taint-annotations",
+                "issues": "https://github.com/madapaja/Madapaja.TwigModule/issues"
             },
-            "time": "2024-11-23T11:48:52+00:00"
+            "time": "2025-12-22T13:22:00+00:00"
         },
         {
             "name": "marc-mabe/php-enum",
@@ -2337,16 +2438,16 @@
         },
         {
             "name": "ray/media-query",
-            "version": "1.0.1",
+            "version": "dev-add-psalm-taint-annotations",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ray-di/Ray.MediaQuery.git",
-                "reference": "ddefedc13a6aea465abe35d84cfbb91ce2691a14"
+                "reference": "bde10bf1ea693979b44a701dd7f4a69aa5be31f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ray-di/Ray.MediaQuery/zipball/ddefedc13a6aea465abe35d84cfbb91ce2691a14",
-                "reference": "ddefedc13a6aea465abe35d84cfbb91ce2691a14",
+                "url": "https://api.github.com/repos/ray-di/Ray.MediaQuery/zipball/bde10bf1ea693979b44a701dd7f4a69aa5be31f4",
+                "reference": "bde10bf1ea693979b44a701dd7f4a69aa5be31f4",
                 "shasum": ""
             },
             "require": {
@@ -2377,8 +2478,8 @@
             "extra": {
                 "bamarni-bin": {
                     "bin-links": true,
-                    "forward-command": true,
-                    "target-directory": "vendor-bin"
+                    "target-directory": "vendor-bin",
+                    "forward-command": true
                 }
             },
             "autoload": {
@@ -2386,7 +2487,54 @@
                     "Ray\\MediaQuery\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Ray\\MediaQuery\\": [
+                        "tests/",
+                        "tests/Fake"
+                    ]
+                }
+            },
+            "scripts": {
+                "coverage": [
+                    "php -dzend_extension=xdebug.so -dxdebug.mode=coverage ./vendor/bin/phpunit --coverage-text --coverage-html=build/coverage"
+                ],
+                "pcov": [
+                    "php -dextension=pcov.so -d pcov.enabled=1 ./vendor/bin/phpunit --coverage-text --coverage-html=build/coverage  --coverage-clover=coverage.xml"
+                ],
+                "cs": [
+                    "./vendor/bin/phpcs"
+                ],
+                "cs-fix": [
+                    "./vendor/bin/phpcbf src tests"
+                ],
+                "metrics": [
+                    "./vendor/bin/phpmetrics --report-html=build/metrics --exclude=Exception src"
+                ],
+                "clean": [
+                    "./vendor/bin/phpstan clear-result-cache",
+                    "./vendor/bin/psalm --clear-cache"
+                ],
+                "sa": [
+                    "./vendor/bin/psalm --monochrome --show-info=true",
+                    "./vendor/bin/phpstan analyse -c phpstan.neon"
+                ],
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "tests": [
+                    "@cs",
+                    "@sa",
+                    "@test"
+                ],
+                "build": [
+                    "@clean",
+                    "@cs",
+                    "@sa",
+                    "@pcov",
+                    "@metrics"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -2398,10 +2546,10 @@
             ],
             "description": "PHP interface-based SQL framework",
             "support": {
-                "issues": "https://github.com/ray-di/Ray.MediaQuery/issues",
-                "source": "https://github.com/ray-di/Ray.MediaQuery/tree/1.0.1"
+                "source": "https://github.com/ray-di/Ray.MediaQuery/tree/add-psalm-taint-annotations",
+                "issues": "https://github.com/ray-di/Ray.MediaQuery/issues"
             },
-            "time": "2025-11-23T09:07:24+00:00"
+            "time": "2025-12-28T11:18:53+00:00"
         },
         {
             "name": "ray/object-visual-grapher",
@@ -3161,26 +3309,25 @@
         },
         {
             "name": "symfony/var-exporter",
-            "version": "v7.4.0",
+            "version": "v8.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/var-exporter.git",
-                "reference": "03a60f169c79a28513a78c967316fbc8bf17816f"
+                "reference": "7345f46c251f2eb27c7b3ebdb5bb076b3ffcae04"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/var-exporter/zipball/03a60f169c79a28513a78c967316fbc8bf17816f",
-                "reference": "03a60f169c79a28513a78c967316fbc8bf17816f",
+                "url": "https://api.github.com/repos/symfony/var-exporter/zipball/7345f46c251f2eb27c7b3ebdb5bb076b3ffcae04",
+                "reference": "7345f46c251f2eb27c7b3ebdb5bb076b3ffcae04",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.2",
-                "symfony/deprecation-contracts": "^2.5|^3"
+                "php": ">=8.4"
             },
             "require-dev": {
-                "symfony/property-access": "^6.4|^7.0|^8.0",
-                "symfony/serializer": "^6.4|^7.0|^8.0",
-                "symfony/var-dumper": "^6.4|^7.0|^8.0"
+                "symfony/property-access": "^7.4|^8.0",
+                "symfony/serializer": "^7.4|^8.0",
+                "symfony/var-dumper": "^7.4|^8.0"
             },
             "type": "library",
             "autoload": {
@@ -3218,7 +3365,7 @@
                 "serialize"
             ],
             "support": {
-                "source": "https://github.com/symfony/var-exporter/tree/v7.4.0"
+                "source": "https://github.com/symfony/var-exporter/tree/v8.0.0"
             },
             "funding": [
                 {
@@ -3238,7 +3385,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-09-11T10:15:23+00:00"
+            "time": "2025-11-05T18:53:00+00:00"
         },
         {
             "name": "twig/twig",
@@ -6683,9 +6830,38 @@
             "time": "2025-11-17T20:03:58+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "aura/sql",
+            "version": "dev-add-psalm-taint-annotations",
+            "alias": "6.0.0",
+            "alias_normalized": "6.0.0.0"
+        },
+        {
+            "package": "bear/resource",
+            "version": "dev-add-psalm-taint-annotations",
+            "alias": "1.28.0",
+            "alias_normalized": "1.28.0.0"
+        },
+        {
+            "package": "madapaja/twig-module",
+            "version": "dev-add-psalm-taint-annotations",
+            "alias": "2.6.0",
+            "alias_normalized": "2.6.0.0"
+        },
+        {
+            "package": "ray/media-query",
+            "version": "dev-add-psalm-taint-annotations",
+            "alias": "1.0.1",
+            "alias_normalized": "1.0.1.0"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "aura/sql": 20,
+        "bear/resource": 20,
+        "madapaja/twig-module": 20,
+        "ray/media-query": 20,
         "roave/security-advisories": 20
     },
     "prefer-stable": false,
