@@ -10,8 +10,7 @@
     runTaintAnalysis="true"
 >
     <projectFiles>
-        <directory name="src"/>
-        <directory name="demo-app/src"/>
+        <directory name="demo/src"/>
         <ignoreFiles>
             <directory name="vendor"/>
         </ignoreFiles>
@@ -20,29 +19,28 @@
         <file name="stubs/PDO.phpstub"/>
     </stubs>
     <plugins>
-        <pluginClass class="BearSunday\TaintDemo\ResourceTaintPlugin"/>
+        <pluginClass class="BEAR\Security\Psalm\ResourceTaintPlugin"/>
     </plugins>
     <issueHandlers>
         <MissingConstructor errorLevel="suppress" />
         <NonInvariantDocblockPropertyType>
             <errorLevel type="suppress">
-                <directory name="demo-app"/>
+                <directory name="demo"/>
             </errorLevel>
         </NonInvariantDocblockPropertyType>
         <PropertyNotSetInConstructor>
             <errorLevel type="suppress">
-                <directory name="demo-app"/>
+                <directory name="demo"/>
             </errorLevel>
         </PropertyNotSetInConstructor>
         <MissingOverrideAttribute>
             <errorLevel type="suppress">
-                <directory name="src"/>
-                <directory name="demo-app"/>
+                <directory name="demo"/>
             </errorLevel>
         </MissingOverrideAttribute>
         <ClassMustBeFinal>
             <errorLevel type="suppress">
-                <directory name="demo-app"/>
+                <directory name="demo"/>
             </errorLevel>
         </ClassMustBeFinal>
     </issueHandlers>
