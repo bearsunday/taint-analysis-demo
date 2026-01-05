@@ -11,7 +11,7 @@ BEAR.Sunday の `ResourceObject` は内部的に `call_user_func_array` を介�
 ## Installation
 
 ```bash
-composer require --dev bear/psalm-taint-plugin
+composer require --dev bear-sunday/taint-demo
 ```
 
 ## Configuration
@@ -143,4 +143,4 @@ composer install
 ## References
 
 - [Psalm Taint Analysis](https://psalm.dev/docs/security_analysis/)
-- [BEAR.Sunday Framework](https://bearsunday.github.io/)
+- [BEAR.Sunday Security](https://bearsunday.github.io/manuals/1.0/en/security.html)
