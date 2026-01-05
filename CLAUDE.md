@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **BEAR.Sunday Taint Analysis Demo** - a security validation project that uses Psalm's taint analysis to detect security vulnerabilities. The project contains intentionally vulnerable code (`src/Resource/App/Vulnerable/`) alongside secure patterns (`src/Resource/App/Safe/`) to validate Psalm correctly identifies issues.
+This is a **BEAR.Sunday Psalm Taint Plugin** - a Psalm plugin that enables taint analysis for BEAR.Sunday ResourceObject. The project also contains demo code with intentionally vulnerable patterns (`demo-app/src/Resource/App/Vulnerable/`) and secure patterns (`demo-app/src/Resource/App/Safe/`) to validate detection.
 
 ## Common Commands
 
@@ -12,11 +12,11 @@ This is a **BEAR.Sunday Taint Analysis Demo** - a security validation project th
 # Install dependencies
 composer install
 
-# Run taint analysis on vulnerable code (expect 7 errors)
-./vendor/bin/psalm --taint-analysis src/Resource/App/Vulnerable/
+# Run taint analysis on vulnerable code (expect errors)
+./vendor/bin/psalm --taint-analysis demo-app/src/Resource/App/Vulnerable/
 
 # Run taint analysis on safe code (expect 0 errors)
-./vendor/bin/psalm --taint-analysis src/Resource/App/Safe/
+./vendor/bin/psalm --taint-analysis demo-app/src/Resource/App/Safe/
 
 # Full test suite (code style, static analysis, quality checks)
 composer tests
@@ -64,8 +64,9 @@ Methods must return `$this` for response transfer.
 
 ### Key Directories
 
-- `src/Resource/App/Vulnerable/` - SQL injection, XSS, shell injection, SSRF examples
-- `src/Resource/App/Safe/` - Prepared statements, HTML escaping, JsonRenderer patterns
+- `src/` - Psalm plugin (`ResourceTaintPlugin.php`, `ResourceTaintHandler.php`)
+- `demo-app/src/Resource/App/Vulnerable/` - SQL injection, XSS, shell injection, SSRF examples
+- `demo-app/src/Resource/App/Safe/` - Prepared statements, HTML escaping, JsonRenderer patterns
 - `stubs/PDO.phpstub` - Custom Psalm stub marking PDO methods as SQL sinks
 
 ### Security Patterns
